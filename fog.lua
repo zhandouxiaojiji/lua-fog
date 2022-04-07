@@ -39,8 +39,8 @@ local function encode_node(node, arr)
         return
     end
     arr[#arr+1] = node.tag
-    encode_node(node.left)
-    encode_node(node.right)
+    encode_node(node.left, arr)
+    encode_node(node.right, arr)
 end
 
 function M.encode(map)
@@ -77,30 +77,29 @@ local function set_tag(map, dst_pos, tag)
         if not node then
             return
         end
+        print("###", node.left.tag, node.right.tag)
         if node.left.tag == node.right.tag then
             node.tag = node.left.tag
             node.left = nil
             node.right = nil
+            print("revert_parent", node.min, node.max)
             revert_parent(node.parent)
         end
     end
     local function find(node)
         if node.tag == tag then
+            print("no need to change", node.min, node.max)
             return
         end
         if node.min == node.max then
             node.tag = tag
+            print("revert_parent", node.min, node.max, node.parent)
             revert_parent(node.parent)
             return
         end
         local center = node.min + (node.max - node.min) // 2
-        if node.max - node.min == 1 then
-            node.left = create_node(node, node.tag, node.min, node.min)
-            node.right = create_node(node, node.tag, node.max, node.max)
-        else
-            node.left = create_node(node, node.tag, node.min, center - 1 > node.min and center - 1 or node.min)
-            node.right = create_node(node, node.tag, center < node.max and center or node.max, node.max)
-        end
+        node.left = create_node(node, node.tag, node.min, center)
+        node.right = create_node(node, node.tag, center + 1 < node.max and center + 1 or node.max, node.max)
         node.tag = MIX
         print("split", node.left.min, node.left.max, "=", node.right.min, node.right.max)
         if dst_pos < center then
