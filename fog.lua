@@ -16,10 +16,12 @@ for i = 1, 60 do
     c2n[c] = n
 end
 
-local function create_node(parent, tag)
+local function create_node(parent, tag, min, max)
     return {
         tag = tag,
-        parent = parent
+        parent = parent,
+        min = min,
+        max = max,
     }
 end
 
@@ -28,7 +30,7 @@ function M.create(size, tag)
     local map = {
         size = size,
     }
-    map.root = create_node(nil, tag or FOG)
+    map.root = create_node(nil, tag or FOG, 0, size - 1)
     return map
 end
 
@@ -68,6 +70,56 @@ function M.decode(str)
         local c = ssub(str, i, i)
         print(c, c2n[c])
     end
+end
+
+local function set_tag(map, dst_pos, tag)
+    local function revert_parent(node)
+        if not node then
+            return
+        end
+        if node.left.tag == node.right.tag then
+            node.tag = node.left.tag
+            node.left = nil
+            node.right = nil
+            revert_parent(node.parent)
+        end
+    end
+    local function find(node)
+        if node.tag == tag then
+            return
+        end
+        if node.min == node.max then
+            node.tag = tag
+            revert_parent(node.parent)
+            return
+        end
+        local center = node.min + (node.max - node.min) // 2
+        if node.max - node.min == 1 then
+            node.left = create_node(node, node.tag, node.min, node.min)
+            node.right = create_node(node, node.tag, node.max, node.max)
+        else
+            node.left = create_node(node, node.tag, node.min, center - 1 > node.min and center - 1 or node.min)
+            node.right = create_node(node, node.tag, center < node.max and center or node.max, node.max)
+        end
+        node.tag = MIX
+        print("split", node.left.min, node.left.max, "=", node.right.min, node.right.max)
+        if dst_pos < center then
+            print("left", node.left.min, node.left.max)
+            find(node.left)
+        else
+            print("right", node.right.min, node.right.max)
+            find(node.right)
+        end
+    end
+    find(map.root)
+end
+
+function M.dispel(map, dst_pos)
+    set_tag(map, dst_pos, DISPEL)
+end
+
+function M.fog(map, dst_pos)
+    set_tag(map, dst_pos, FOG)
 end
 
 function M.is_fog(pos)
