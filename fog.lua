@@ -55,7 +55,7 @@ function M.encode(map)
             num = 0
         end
         local n = arr[i+1]
-        n = n << (2 * (2 - mod))
+        n = n << 2 * mod
         num = num | n
     end
     if num > 0 then
@@ -64,12 +64,41 @@ function M.encode(map)
     return str
 end
 
-function M.decode(str)
+function M.decode(str, size)
     local len = slen(str)
+    local chars = {}
     for i = 1, len do
         local c = ssub(str, i, i)
-        print(c, c2n[c])
+        chars[i - 1] = c
     end
+    local idx = 0
+    local function pop_tag()
+        local c = chars[idx//3]
+        local mod = idx % 3
+        local tag = c2n[c] >> 2 * mod & 3
+        assert(tag <= MIX)
+        idx = idx + 1
+        return tag
+    end
+    local function pop_create_node(parent, min, max)
+        local node = {
+            parent = parent,
+            tag = pop_tag(),
+            min = min,
+            max = max,
+        }
+        if node.tag == MIX then
+            local center = min + (max - min) // 2
+            node.left = pop_create_node(node, min, center)
+            node.right = pop_create_node(node, center + 1 < max and center + 1 or max, max)
+        end
+        return node
+    end
+    local map = {
+        size = size,
+    }
+    map.root = pop_create_node(nil, 0, size - 1)
+    return map
 end
 
 local function set_tag(map, pos, tag)
