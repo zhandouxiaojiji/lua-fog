@@ -72,7 +72,7 @@ function M.decode(str)
     end
 end
 
-local function set_tag(map, dst_pos, tag)
+local function set_tag(map, pos, tag)
     local function revert_parent(node)
         if not node then
             return
@@ -81,18 +81,15 @@ local function set_tag(map, dst_pos, tag)
             node.tag = node.left.tag
             node.left = nil
             node.right = nil
-            -- print("revert_parent", node.min, node.max)
             revert_parent(node.parent)
         end
     end
-    local function find(node)
+    local function find_and_insert(node)
         if node.tag == tag then
-            -- print("no need to change", node.min, node.max)
             return
         end
         if node.min == node.max then
             node.tag = tag
-            -- print("revert_parent", node.min, node.max, node.parent)
             revert_parent(node.parent)
             return
         end
@@ -101,29 +98,38 @@ local function set_tag(map, dst_pos, tag)
             node.left = create_node(node, node.tag, node.min, center)
             node.right = create_node(node, node.tag, center + 1 < node.max and center + 1 or node.max, node.max)
             node.tag = MIX
-            -- print("split", node.left.min, node.left.max, "=", node.right.min, node.right.max)
         end
 
-        if dst_pos <= center then
-            -- print("left", node.left.min, node.left.max)
-            find(node.left)
+        if pos <= center then
+            find_and_insert(node.left)
         else
-            -- print("right", node.right.min, node.right.max)
-            find(node.right)
+            find_and_insert(node.right)
         end
     end
-    find(map.root)
+    find_and_insert(map.root)
 end
 
-function M.dispel(map, dst_pos)
-    set_tag(map, dst_pos, DISPEL)
+function M.dispel(map, pos)
+    set_tag(map, pos, DISPEL)
 end
 
-function M.fog(map, dst_pos)
-    set_tag(map, dst_pos, FOG)
+function M.fog(map, pos)
+    set_tag(map, pos, FOG)
 end
 
-function M.is_fog(pos)
+function M.is_fog(map, pos)
+    local function find(node)
+        if pos <= node.max and pos >= node.min and node.tag ~= MIX then
+            return node.tag
+        end
+        local center = node.min + (node.max - node.min) // 2
+        if pos <= center then
+            return find(node.left)
+        else
+            return find(node.right)
+        end
+    end
+    return find(map.root) == FOG
 end
 
 return M

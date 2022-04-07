@@ -6,9 +6,14 @@ local map = fog.create(1000000)
 local str = fog.encode(map)
 print(str)
 
+print("dispel 100 - 102")
 fog.dispel(map, 100)
 fog.dispel(map, 101)
 fog.dispel(map, 102)
+
+assert(not fog.is_fog(map, 100))
+assert(not fog.is_fog(map, 101))
+assert(not fog.is_fog(map, 102))
 
 print(fog.encode(map))
 
