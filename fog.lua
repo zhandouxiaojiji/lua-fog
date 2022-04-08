@@ -9,7 +9,7 @@ local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
 local n2c = {}
 local c2n = {}
 
-for i = 1, 60 do
+for i = 1, 64 do
     local c = ssub(b64chars, i, i)
     local n = i - 1
     n2c[n] = c
