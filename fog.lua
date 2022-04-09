@@ -1,6 +1,6 @@
 local DISPEL = 0 -- 全驱散
-local FOG = 1 -- 全迷雾
-local MIX = 2 -- 混合
+local MIX = 1 -- 混合
+local FOG = 2 -- 全迷雾
 
 local slen = string.len
 local ssub = string.sub
@@ -58,9 +58,7 @@ function M.encode(map)
         n = n << 2 * mod
         num = num | n
     end
-    if num > 0 then
-        str = str .. n2c[num]
-    end
+    str = str .. n2c[num]
     return str
 end
 
@@ -76,7 +74,7 @@ function M.decode(str, size)
         local c = chars[idx//3]
         local mod = idx % 3
         local tag = c2n[c] >> 2 * mod & 3
-        assert(tag <= MIX)
+        assert(tag <= FOG, tag)
         idx = idx + 1
         return tag
     end
@@ -146,19 +144,68 @@ function M.fog(map, pos)
     set_tag(map, pos, FOG)
 end
 
+local function find(node, pos)
+    if pos <= node.max and pos >= node.min and node.tag ~= MIX then
+        return node.tag
+    end
+    local center = node.min + (node.max - node.min) // 2
+    if pos <= center then
+        return find(node.left, pos)
+    else
+        return find(node.right, pos)
+    end
+end
 function M.is_fog(map, pos)
-    local function find(node)
-        if pos <= node.max and pos >= node.min and node.tag ~= MIX then
-            return node.tag
-        end
-        local center = node.min + (node.max - node.min) // 2
-        if pos <= center then
-            return find(node.left)
-        else
-            return find(node.right)
+    return find(map.root, pos) == FOG
+end
+function M.is_dispel(map, pos)
+    return find(map.root, pos) == DISPEL
+end
+
+local function clone_node(node, parent)
+    if not node then
+        return
+    end
+    local new = {
+        parent = parent,
+        tag = node.tag,
+        max = node.max,
+        min = node.min,
+    }
+    new.left = clone_node(new.left, new)
+    new.right = clone_node(new.right, new)
+    return new
+end
+
+function M.union(map1, map2)
+    assert(map1.size == map2.size)
+    local map = {
+        size = map1.size
+    }
+    local function union(node1, node2, parent)
+        if node1.tag == MIX and node2.tag == MIX then
+            local node = {
+                parent = parent,
+                tag = MIX,
+                min = node1.min,
+                max = node2.max,
+            }
+            node.left = union(node1.left, node2.left, node)
+            node.right = union(node1.right, node2.right, node)
+            if node.left.tag == node.right.tag then
+                node.tag = node.left.tag
+                node.left = nil
+                node.right = nil
+            end
+            return node
+        elseif node1.tag == node2.tag or node1.tag < node2.tag then
+            return clone_node(node1, parent)
+        elseif node2.tag < node1.tag then
+            return clone_node(node2, parent)
         end
     end
-    return find(map.root) == FOG
+    map.root = union(map1.root, map2.root)
+    return map
 end
 
 return M

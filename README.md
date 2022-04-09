@@ -5,8 +5,8 @@
 |状态|标识|
 |---|---|
 |全驱散|0|
-|全迷雾|1|
-|二者混合|2|
+|二者混合|1|
+|全迷雾|2|
 
 # API
 + fog.create(size) 创建指定大小的地图
@@ -15,6 +15,7 @@
 + fog.dispel(map, pos) 驱散迷雾
 + fog.fog(map, pos) 设置迷雾
 + fog.is_fog(map, pos) 检查迷雾
++ fog.union(map1, map2) 求并集
 
 # Usage
 ```lua
