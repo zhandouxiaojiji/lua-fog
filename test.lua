@@ -46,3 +46,7 @@ print(fog.encode(map3))
 assert(fog.is_dispel(map3, 0))
 assert(fog.is_dispel(map3, 1))
 assert(fog.is_dispel(map3, 2))
+
+print("========= test create ==========")
+local map4 = fog.create(size, fog.DISPEL)
+print(fog.encode(map4))

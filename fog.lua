@@ -1,6 +1,6 @@
 local DISPEL = 0 -- 全驱散
-local MIX = 1 -- 混合
-local FOG = 2 -- 全迷雾
+local FOG = 1 -- 全迷雾
+local MIX = 2 -- 混合
 
 local slen = string.len
 local ssub = string.sub
@@ -25,7 +25,11 @@ local function create_node(parent, tag, min, max)
     }
 end
 
-local M = {}
+local M = {
+    DISPEL = DISPEL,
+    FOG = FOG,
+    MIX = MIX,
+}
 function M.create(size, tag)
     local map = {
         size = size,
@@ -74,7 +78,7 @@ function M.decode(str, size)
         local c = chars[idx//3]
         local mod = idx % 3
         local tag = c2n[c] >> 2 * mod & 3
-        assert(tag <= FOG, tag)
+        assert(tag <= MIX, tag)
         idx = idx + 1
         return tag
     end
