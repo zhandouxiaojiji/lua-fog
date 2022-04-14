@@ -50,3 +50,18 @@ assert(fog.is_dispel(map3, 2))
 print("========= test create ==========")
 local map4 = fog.create(size, fog.DISPEL)
 print(fog.encode(map4))
+
+print("========= test cmp ==========")
+-- size = 3
+local map5 = fog.create(size)
+fog.dispel(map5, 0)
+fog.dispel(map5, 2)
+fog.dispel(map5, 3)
+
+local map6 = fog.create(size)
+fog.dispel(map6, 4)
+fog.dispel(map6, 2)
+fog.dispel(map6, 3)
+local new_fog_list, new_dispel_list = fog.cmp(map5, map6)
+print("new_fog_list", table.concat(new_fog_list, ","))
+print("new_dispel_list", table.concat(new_dispel_list, ","))
