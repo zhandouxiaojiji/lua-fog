@@ -82,7 +82,35 @@ function M.create(w, h, tag)
     return map
 end
 
+local function encode_node(node, arr)
+    if not node then
+        return arr
+    end
+    arr[#arr+1] = node.tag
+    if node.tag == MIX then
+        for _, dir in ipairs(DIRECTS) do
+            encode_node(node.children[dir], arr)
+        end
+    end
+    return arr
+end
+
 function M.encode_base64(map)
+    local arr = encode_node(map.root, {})
+    local num = 0
+    local str = ""
+    for i = 0, #arr - 1 do
+        local mod = i % 3
+        if mod == 0 and i > 0 then
+            str = str .. n2c[num]
+            num = 0
+        end
+        local n = arr[i+1]
+        n = n << 2 * mod
+        num = num | n
+    end
+    str = str .. n2c[num]
+    return str
 end
 
 function M.decode_base64(str, w, h)
