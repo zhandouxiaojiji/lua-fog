@@ -35,7 +35,7 @@ local function create_node(parent, left, right, buttom, top, tag)
         right = right,
         top = top,
         buttom = buttom,
-        tag = tag,
+        tag = tag or FOG,
         parent = parent,
         children = {},
     }
@@ -45,17 +45,17 @@ local function init_children(parent, tag)
     if next(parent.children) then
         return
     end
-    local w = parent.right - parent.left
-    local h = parent.top - parent.buttom
+    local w = parent.right - parent.left + 1
+    local h = parent.top - parent.buttom + 1
     local mx = parent.left + w // 2
     local my = parent.buttom + h // 2
-    if w <= 1 and h <= 1 then
+    if w <= 0 and h <= 0 then
         return
     end
-    parent.children[LT] = create_node(parent, parent.left, mx, my, parent.top, tag)
-    parent.children[RT] = create_node(parent, mx + 1, parent.right, my, parent.top, tag)
-    parent.children[LB] = create_node(parent, parent.left, mx, parent.buttom, my - 1, tag)
-    parent.children[RB] = create_node(parent, mx + 1, parent.right, parent.buttom, my - 1, tag)
+    parent.children[LT] = create_node(parent, parent.left, mx - 1, my, parent.top, tag)
+    parent.children[RT] = create_node(parent, mx, parent.right, my, parent.top, tag)
+    parent.children[LB] = create_node(parent, parent.left, mx - 1, parent.buttom, my - 1, tag)
+    parent.children[RB] = create_node(parent, mx , parent.right, parent.buttom, my - 1, tag)
 end
 
 local M = {
@@ -68,7 +68,7 @@ function M.create(w, h, tag)
         w = w,
         h = h,
     }
-    map.root = create_node(nil, 0, w - 1, 0, h - 1, tag or FOG)
+    map.root = create_node(nil, 0, w - 1, 0, h - 1)
     return map
 end
 
@@ -84,7 +84,7 @@ end
 function M.decode_binary(str, w, h)
 end
 
-local function dispel_node(node, left, right, buttom, top, tag)
+local function dispel_node(node, left, right, buttom, top)
     if left < node.left then
         left = node.left
     end
@@ -102,14 +102,31 @@ local function dispel_node(node, left, right, buttom, top, tag)
         return
     end
 
-    init_children(node)
-    for _, child in pairs(node.children) do
-        dispel_node(child, left, right, buttom, top, tag)
+    if left == node.left and right == node.right and buttom == node.buttom and top == node.top then
+        node.tag = DISPEL
+        node.children = {}
+        return node.tag
     end
+
+    init_children(node)
+    local mix = false
+    for _, child in pairs(node.children) do
+        local tag = dispel_node(child, left, right, buttom, top)
+        if tag ~= DISPEL then
+            mix = true
+        end
+    end
+    if mix then
+        node.tag = MIX
+    else
+        node.tag = DISPEL
+        node.children = {}
+    end
+    return node.tag
 end
 
 function M.dispel_fog(map, x, y, w, h)
-    dispel_node(map.root, x, x + w - 1, y, y + h - 1, DISPEL)
+    dispel_node(map.root, x, x + w - 1, y, y + h - 1)
 end
 
 function M.cover_fog(map, x, y, w, h)
