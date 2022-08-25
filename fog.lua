@@ -41,14 +41,24 @@ local function create_node(parent, left, right, buttom, top, tag)
     }
 end
 
+local function get_node_size(node)
+    local w = node.right - node.left + 1
+    local h = node.top - node.buttom + 1
+    return w, h
+end
+
+local function get_node_center(node)
+    local w, h = get_node_size(node)
+    local mx = node.left + w // 2
+    local my = node.buttom + h // 2
+    return mx, my, w, h
+end
+
 local function init_children(parent, tag)
     if next(parent.children) then
         return
     end
-    local w = parent.right - parent.left + 1
-    local h = parent.top - parent.buttom + 1
-    local mx = parent.left + w // 2
-    local my = parent.buttom + h // 2
+    local mx, my, w, h = get_node_center(parent)
     if w <= 0 and h <= 0 then
         return
     end
@@ -85,6 +95,9 @@ function M.decode_binary(str, w, h)
 end
 
 local function dispel_node(node, left, right, buttom, top)
+    if node.tag == DISPEL then
+        return node.tag
+    end
     if left < node.left then
         left = node.left
     end
@@ -99,7 +112,7 @@ local function dispel_node(node, left, right, buttom, top)
     end
 
     if left > right or buttom > top then
-        return
+        return node.tag
     end
 
     if left == node.left and right == node.right and buttom == node.buttom and top == node.top then
@@ -132,9 +145,22 @@ end
 function M.cover_fog(map, x, y, w, h)
 end
 
-function M.is_fog(map, pos)
+local function find_tag(node, x, y)
+    for _, child in pairs(node.children) do
+        if x >= child.left and x <= child.right and y >= child.buttom and y <= child.top then
+            return find_tag(child, x, y)
+        end
+    end
+    return node.tag
 end
-function M.is_dispel(map, pos)
+
+function M.is_fog(map, x, y)
+    local tag = find_tag(map.root, x, y)
+    return tag == FOG
+end
+function M.is_dispel(map, x, y)
+    local tag = find_tag(map.root, x, y)
+    return tag == DISPEL
 end
 
 function M.union(map1, map2)
