@@ -4,7 +4,6 @@ local FOG = 2 -- 全迷雾
 
 local slen = string.len
 local ssub = string.sub
-local type = type
 
 local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 local n2c = {}
@@ -95,7 +94,7 @@ local function encode_node(node, arr)
     return arr
 end
 
-function M.encode_base64(map)
+function M.encode(map)
     local arr = encode_node(map.root, {})
     local num = 0
     local str = ""
@@ -113,7 +112,7 @@ function M.encode_base64(map)
     return str
 end
 
-function M.decode_base64(str, w, h)
+function M.decode(str, w, h)
     local len = slen(str)
     local chars = {}
     for i = 1, len do
@@ -161,12 +160,6 @@ function M.decode_base64(str, w, h)
     }
     map.root = pop_create_node(nil, 0, w - 1, 0, h - 1)
     return map
-end
-
-function M.encode_binary(map)
-end
-
-function M.decode_binary(str, w, h)
 end
 
 local function dispel_node(node, left, right, buttom, top)
