@@ -114,6 +114,53 @@ function M.encode_base64(map)
 end
 
 function M.decode_base64(str, w, h)
+    local len = slen(str)
+    local chars = {}
+    for i = 1, len do
+        local c = ssub(str, i, i)
+        chars[i - 1] = c
+    end
+    local idx = 0
+    local function pop_tag()
+        local c = chars[idx//3]
+        local mod = idx % 3
+        local tag = c2n[c] >> 2 * mod & 3
+        assert(tag <= FOG, tag)
+        idx = idx + 1
+        return tag
+    end
+    local function pop_create_node(parent, left, right, buttom, top)
+        if left > right or buttom > top then
+            return
+        end
+        local tag = pop_tag()
+        local node = {
+            left = left,
+            right = right,
+            buttom = buttom,
+            top = top,
+            tag = tag,
+            parent = parent,
+            children = {},
+        }
+        if tag == MIX then
+            local mx, my, nw, nh = get_node_center(node)
+            if nw <= 0 and nh <= 0 then
+                return
+            end
+            node.children[LT] = pop_create_node(node, node.left, mx - 1, my, node.top)
+            node.children[RT] = pop_create_node(node, mx, node.right, my, node.top)
+            node.children[LB] = pop_create_node(node, node.left, mx - 1, node.buttom, my - 1)
+            node.children[RB] = pop_create_node(node, mx , node.right, node.buttom, my - 1)
+        end
+        return node
+    end
+    local map = {
+        w = w,
+        h = h,
+    }
+    map.root = pop_create_node(nil, 0, w - 1, 0, h - 1)
+    return map
 end
 
 function M.encode_binary(map)
