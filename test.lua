@@ -1,67 +1,53 @@
-
 local fog = require "fog"
 
-local size = 100000
-local map = fog.create(size)
+local function test()
+    local w, h = 10000, 5000
+    local map = fog.create(w, h)
+    print(fog.encode(map)) -- ouput: C
+    fog.dispel_fog(map, 100, 100, 10, 10)
+    local str = fog.encode(map)
+    print(str) -- ouput: ppppplaZapmkCZiJUKhGhEqVmImQmYCFhIhGhEaZioBqWEiqqqqqC
+    local map2 = fog.decode(str, w, h)
+    fog.dispel_fog(map2, 0, 0, 10000, 10000)
+    print(fog.encode(map2)) -- ouput: A
+    fog.cover_fog(map2, 0, 0, 5000, 10000)
+    print(fog.encode(map2)) -- ouput: JC
+end
+test()
 
-local str = fog.encode(map)
-print(str)
+local function test1(map_size, hole_size, hole_count)
+    local map = fog.create(map_size.w, map_size.h)
+    for _ = 1, hole_count do
+        local x = math.random(0, map_size.w - 1)
+        local y = math.random(0, map_size.h - 1)
+        fog.dispel_fog(map, x, y, hole_size.w, hole_size.h)
+        assert(fog.is_dispel(map, x, y))
+    end
+    local str = fog.encode(map)
+    local size = string.len(str)/1024
+    print(string.format("map:%dx%d, hole:%dx%d count:%d, size:%.2fkb",
+        map_size.w, map_size.h, hole_size.w, hole_size.h, hole_count, size))
+end
 
-print("dispel 100 - 102")
-fog.dispel(map, 100)
-fog.dispel(map, 101)
-fog.dispel(map, 102)
+for i = 1, 10 do
+    test1({w = 2500, h = 2500}, {w = 30, h = 30}, 100)
+end
 
-assert(not fog.is_fog(map, 100))
-assert(not fog.is_fog(map, 101))
-assert(not fog.is_fog(map, 102))
+local function test2(map_size)
+    local map = fog.create(map_size.w, map_size.h)
+    fog.dispel_fog(map, 2, 2, 2, 2)
+    fog.dispel_fog(map, 3, 3, 2, 2)
+    fog.dispel_fog(map, 0, 16, 100, 100)
+    fog.dispel_fog(map, 10, 3, 10, 100)
+    fog.dump(map)
+    local str = fog.encode(map)
+    print(str)
+    local map2 = fog.decode(str, map_size.w, map_size.h)
+    fog.cover_fog(map2, 18, 18, 100, 100)
+    fog.dump(map2)
+end
+test2({w = 20, h = 20})
 
-str = fog.encode(map)
-print(str)
-local new_map = fog.decode(str, size)
-assert(not fog.is_fog(new_map, 100))
-assert(not fog.is_fog(new_map, 101))
-assert(not fog.is_fog(new_map, 102))
 
-fog.fog(map, 100)
-fog.fog(map, 101)
-fog.fog(map, 102)
 
-print(fog.encode(map))
-
-print("========= test union ==========")
-size = 10000
-local map1 = fog.create(size)
-fog.dispel(map1, 0)
-fog.dispel(map1, 2)
-
-local map2 = fog.create(size)
-fog.dispel(map2, 1)
-
-local map3 = fog.union(map1, map2)
-print(fog.encode(map1))
-print(fog.encode(map2))
-print(fog.encode(map3))
-
-assert(fog.is_dispel(map3, 0))
-assert(fog.is_dispel(map3, 1))
-assert(fog.is_dispel(map3, 2))
-
-print("========= test create ==========")
-local map4 = fog.create(size, fog.DISPEL)
-print(fog.encode(map4))
-
-print("========= test cmp ==========")
--- size = 3
-local map5 = fog.create(size)
-fog.dispel(map5, 0)
-fog.dispel(map5, 2)
-fog.dispel(map5, 3)
-
-local map6 = fog.create(size)
-fog.dispel(map6, 4)
-fog.dispel(map6, 2)
-fog.dispel(map6, 3)
-local new_fog_list, new_dispel_list = fog.cmp(map5, map6)
-print("new_fog_list", table.concat(new_fog_list, ","))
-print("new_dispel_list", table.concat(new_dispel_list, ","))
+print("test ok")
