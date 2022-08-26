@@ -197,4 +197,19 @@ end
 function M.cmp(old_map, new_map)
 end
 
+function M.dump(map)
+    local str = ""
+    for y = map.h - 1, 0, -1 do
+        for x = 0, map.w - 1 do
+            if M.is_fog(map, x, y) then
+                str = str .. "@ "
+            else
+                str = str .. "+ "
+            end
+        end
+        str = str .. "\n"
+    end
+    print(str)
+end
+
 return M
