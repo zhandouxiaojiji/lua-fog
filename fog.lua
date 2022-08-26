@@ -232,7 +232,66 @@ function M.is_dispel(map, x, y)
     return tag == DISPEL
 end
 
+local function clone_node(node, parent)
+    if not node then
+        return
+    end
+    local new = {
+        left = node.left,
+        right = node.right,
+        buttom = node.buttom,
+        top = node.top,
+        tag = node.tag,
+        parent = parent,
+        children = {},
+    }
+    for _, dir in ipairs(DIRECTS) do
+        new.children[dir] = clone_node(node.children[dir], new)
+    end
+    return new
+end
+
 function M.union(map1, map2)
+    assert(map1.w == map2.w and map1.h == map2.h)
+    local map = {
+        w = map1.w,
+        h = map2.h,
+    }
+    local function union(node1, node2, parent)
+        if node1.tag == MIX and node2.tag == MIX then
+            local node = {
+                left = node1.left,
+                right = node1.right,
+                buttom = node1.buttom,
+                top = node1.top,
+                parent = parent,
+                tag = MIX,
+                children = {},
+            }
+            for _, dir in ipairs(DIRECTS) do
+                node.children[dir] = union(node1.children[dir], node2.children[dir], node)
+            end
+            local mix, last_tag
+            for _, child in pairs(node.children) do
+                last_tag = last_tag or child.tag
+                if child.tag ~= last_tag then
+                    mix = true
+                    break
+                end
+            end
+            if not mix then
+                node.tag = last_tag
+                node.children = {}
+            end
+            return node
+        elseif node1.tag == node2.tag or node1.tag < node2.tag then
+            return clone_node(node1, parent)
+        elseif node2.tag < node1.tag then
+            return clone_node(node2, parent)
+        end
+    end
+    map.root = union(map1.root, map2.root)
+    return map
 end
 
 function M.dump(map)
