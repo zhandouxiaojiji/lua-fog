@@ -19,4 +19,15 @@
 
 # Usage
 ```lua
+local w, h = 10000, 5000
+local map = fog.create(w, h)
+print(fog.encode(map)) -- ouput: C
+fog.dispel_fog(map, 100, 100, 10, 10)
+local str = fog.encode(map)
+print(str) -- ouput: ppppplaZapmkCZiJUKhGhEqVmImQmYCFhIhGhEaZioBqWEiqqqqqC
+local map2 = fog.decode(str, w, h)
+fog.dispel_fog(map2, 0, 0, 10000, 10000)
+print(fog.encode(map2)) -- ouput: A
+fog.cover_fog(map2, 0, 0, 5000, 10000)
+print(fog.encode(map2)) -- ouput: JC
 ```

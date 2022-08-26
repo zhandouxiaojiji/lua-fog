@@ -162,8 +162,8 @@ function M.decode(str, w, h)
     return map
 end
 
-local function dispel_node(node, left, right, buttom, top)
-    if node.tag == DISPEL then
+local function set_node_tag(node, left, right, buttom, top, tag)
+    if node.tag == tag then
         return node.tag
     end
     if left < node.left then
@@ -184,33 +184,34 @@ local function dispel_node(node, left, right, buttom, top)
     end
 
     if left == node.left and right == node.right and buttom == node.buttom and top == node.top then
-        node.tag = DISPEL
+        node.tag = tag
         node.children = {}
         return node.tag
     end
 
-    init_children(node)
+    init_children(node, node.tag)
     local mix = false
     for _, child in pairs(node.children) do
-        local tag = dispel_node(child, left, right, buttom, top)
-        if tag ~= DISPEL then
+        local child_tag = set_node_tag(child, left, right, buttom, top, tag)
+        if child_tag ~= tag then
             mix = true
         end
     end
     if mix then
         node.tag = MIX
     else
-        node.tag = DISPEL
+        node.tag = tag
         node.children = {}
     end
     return node.tag
 end
 
 function M.dispel_fog(map, x, y, w, h)
-    dispel_node(map.root, x, x + w - 1, y, y + h - 1)
+    set_node_tag(map.root, x, x + w - 1, y, y + h - 1, DISPEL)
 end
 
 function M.cover_fog(map, x, y, w, h)
+    set_node_tag(map.root, x, x + w - 1, y, y + h - 1, FOG)
 end
 
 local function find_tag(node, x, y)
@@ -232,9 +233,6 @@ function M.is_dispel(map, x, y)
 end
 
 function M.union(map1, map2)
-end
-
-function M.cmp(old_map, new_map)
 end
 
 function M.dump(map)

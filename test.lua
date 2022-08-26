@@ -1,5 +1,20 @@
 local fog = require "fog"
 
+local function test()
+    local w, h = 10000, 5000
+    local map = fog.create(w, h)
+    print(fog.encode(map)) -- ouput: C
+    fog.dispel_fog(map, 100, 100, 10, 10)
+    local str = fog.encode(map)
+    print(str) -- ouput: ppppplaZapmkCZiJUKhGhEqVmImQmYCFhIhGhEaZioBqWEiqqqqqC
+    local map2 = fog.decode(str, w, h)
+    fog.dispel_fog(map2, 0, 0, 10000, 10000)
+    print(fog.encode(map2)) -- ouput: A
+    fog.cover_fog(map2, 0, 0, 5000, 10000)
+    print(fog.encode(map2)) -- ouput: JC
+end
+test()
+
 local function test1(map_size, hole_size, hole_count)
     local map = fog.create(map_size.w, map_size.h)
     for _ = 1, hole_count do
@@ -28,8 +43,11 @@ local function test2(map_size)
     local str = fog.encode(map)
     print(str)
     local map2 = fog.decode(str, map_size.w, map_size.h)
+    fog.cover_fog(map2, 18, 18, 100, 100)
     fog.dump(map2)
 end
 test2({w = 20, h = 20})
+
+
 
 print("test ok")
