@@ -300,10 +300,14 @@ function M.union(map1, map2)
     return map
 end
 
+
 function M.cmp(old_map, new_map)
     assert(old_map.w == new_map.w and old_map.h == new_map.h)
     local new_fog_list, new_dispel_list = {}, {}
     local function cmp(old, new)
+        if not old or not new then
+            return
+        end
         local old_tag = type(old) == "number" and old or old.tag
         local new_tag = type(new) == "number" and new or new.tag
 
@@ -320,22 +324,28 @@ function M.cmp(old_map, new_map)
             end
         end
 
+        local function cmp_dir(func)
+            for _, dir in pairs(DIRECTS) do
+                func(dir)
+            end
+        end
+
         if old_tag == new_tag then
             if old_tag == MIX then
-                for _, dir in ipairs(DIRECTS) do
+                cmp_dir(function (dir)
                     cmp(old.children[dir], new.children[dir])
-                end
+                end)
             else
                 return
             end
         elseif old_tag == MIX then
-            for _, dir in ipairs(DIRECTS) do
+            cmp_dir(function (dir)
                 cmp(old.children[dir], new_tag)
-            end
+            end)
         elseif new_tag == MIX then
-            for _, dir in ipairs(DIRECTS) do
+            cmp_dir(function (dir)
                 cmp(old_tag, new.children[dir])
-            end
+            end)
         else
             add_to_list()
         end
