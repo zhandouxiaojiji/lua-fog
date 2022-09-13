@@ -178,38 +178,45 @@ local function fix_border(node, left, right, buttom, top)
     return left, right, buttom, top
 end
 
+local function fix_node_tag(node)
+    local last_tag, mix
+    for _, child in pairs(node.children) do
+        last_tag = last_tag or child.tag
+        if last_tag == MIX or last_tag ~= child.tag then
+            mix = true
+            break
+        end
+    end
+    if mix or last_tag == MIX then
+        node.tag = MIX
+    else
+        node.tag = assert(last_tag)
+        node.children = {}
+    end
+end
+
 local function set_node_tag(node, left, right, buttom, top, tag)
     if node.tag == tag then
-        return node.tag
+        return
     end
 
     left, right, buttom, top = fix_border(node, left, right, buttom, top)
 
     if left > right or buttom > top then
-        return node.tag
+        return
     end
 
     if left == node.left and right == node.right and buttom == node.buttom and top == node.top then
         node.tag = tag
         node.children = {}
-        return node.tag
+        return
     end
 
     init_children(node, node.tag)
-    local mix = false
     for _, child in pairs(node.children) do
-        local child_tag = set_node_tag(child, left, right, buttom, top, tag)
-        if child_tag ~= tag then
-            mix = true
-        end
+        set_node_tag(child, left, right, buttom, top, tag)
     end
-    if mix then
-        node.tag = MIX
-    else
-        node.tag = tag
-        node.children = {}
-    end
-    return node.tag
+    fix_node_tag(node)
 end
 
 function M.dispel_fog(map, x, y, w, h)
@@ -299,7 +306,6 @@ function M.union(map1, map2)
     map.root = union(map1.root, map2.root)
     return map
 end
-
 
 function M.cmp(old_map, new_map)
     assert(old_map.w == new_map.w and old_map.h == new_map.h)

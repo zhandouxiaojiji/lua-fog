@@ -5,6 +5,7 @@ local function test()
     local map1 = fog.create(w, h)
     print(fog.encode(map1)) -- ouput: C
     fog.dispel_fog(map1, 100, 100, 10, 10)
+    assert(fog.is_dispel(map1, 100, 100))
     local str = fog.encode(map1)
     print(str) -- ouput: ppppplaZapmkCZiJUKhGhEqVmImQmYCFhIhGhEaZioBqWEiqqqqqC
     local map2 = fog.decode(str, w, h)
@@ -70,15 +71,33 @@ test3()
 local function test4()
     local w, h = 2520, 2520
     local map1 = fog.create(w, h)
-    fog.dispel_fog(map1, 10, 10, 10, 10)
-    -- fog.dump(map1)
-    local map2 = fog.create(w, h)
-    fog.dispel_fog(map2, 200, 200, 10, 10)
-    local fog_list, dispel_list = fog.cmp(map2, map1)
+
+    local str = "ZqpWqpmZpmCmBqqqqppppZaaJGoBBCWiQiQFiEiEJCJShIhIRiQikWEJCJEJkERISIRIhRkQCRCJRESIRIhFRISIRIhREiESESYEhESESYEhESESoVWiQiglIkIUhIhIRiQiUISISkIkIZJCJCWiQiQFiEiEJCJShIhIRiQiURkIkQkQSEhIhEhEGRiQCRCJREiESESYREiESESYEhIhEhEGRISIRIhREiESESYRkIkQkQSEhIhEhEGRiQCRCJREiESESYREiESESYEhIhEhEGRISIRIhREiESESYZJCJCWiQiQFiEiEJCJShIhIRiQiklIkIYJCJCVISISkIkIFiEiEJCJSFRiQCRCJREiESESYEJCJEJkERISIRIhFRISIRIhREiESESYEhIhEhEGRISIRIhFRiQCRCJREiESESYEJkQkQSEhESESYREiESESYEhIhEhEGRIhEhEGRIhEhEWaaUiQiAlIkIoWRJCJCUiQigRJCJCUiQigWUiQiAlIkIYUiQiAlIkIoqK"
+    local map2 = fog.decode(str, w, h)
+
+    local fog_list, dispel_list = fog.cmp(map1, map2)
     print("fog_list", #fog_list)
     print("dispel_list", #dispel_list)
 end
 print("=========================================")
 test4()
+
+local function test5()
+    local w, h = 3, 3
+    local map1 = fog.create(w, h)
+
+    local map2 = fog.create(w, h)
+    fog.dispel_fog(map2, 0, 0, 2, 2)
+    fog.dispel_fog(map2, 2, 2, 2, 2)
+
+    local fog_list, dispel_list = fog.cmp(map1, map2)
+    print("fog_list", #fog_list)
+    print("dispel_list", #dispel_list)
+    for _, v in pairs(dispel_list) do
+        print(v[1], v[2])
+    end
+end
+print("=========================================")
+test5()
 
 print("test ok")
