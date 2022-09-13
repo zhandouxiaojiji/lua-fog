@@ -162,10 +162,7 @@ function M.decode(str, w, h)
     return map
 end
 
-local function set_node_tag(node, left, right, buttom, top, tag)
-    if node.tag == tag then
-        return node.tag
-    end
+local function fix_border(node, left, right, buttom, top)
     if left < node.left then
         left = node.left
     end
@@ -178,6 +175,15 @@ local function set_node_tag(node, left, right, buttom, top, tag)
     if top > node.top then
         top = node.top
     end
+    return left, right, buttom, top
+end
+
+local function set_node_tag(node, left, right, buttom, top, tag)
+    if node.tag == tag then
+        return node.tag
+    end
+
+    left, right, buttom, top = fix_border(node, left, right, buttom, top)
 
     if left > right or buttom > top then
         return node.tag
