@@ -77,7 +77,7 @@ function M.create(w, h, tag)
         w = w,
         h = h,
     }
-    map.root = create_node(nil, 0, w - 1, 0, h - 1)
+    map.root = create_node(nil, 0, w - 1, 0, h - 1, tag)
     return map
 end
 
@@ -298,6 +298,50 @@ function M.union(map1, map2)
     end
     map.root = union(map1.root, map2.root)
     return map
+end
+
+function M.cmp(old_map, new_map)
+    assert(old_map.w == new_map.w and old_map.h == new_map.h)
+    local new_fog_list, new_dispel_list = {}, {}
+    local function cmp(old, new)
+        local old_tag = type(old) == "number" and old or old.tag
+        local new_tag = type(new) == "number" and new or new.tag
+
+        local function add_to_list()
+            local node = type(old) == "table" and old or new
+            for x = node.left, node.right do
+                for y = node.buttom, node.top do
+                    if new_tag == FOG then
+                        new_fog_list[#new_fog_list+1] = {x, y}
+                    else
+                        new_dispel_list[#new_dispel_list+1] = {x, y}
+                    end
+                end
+            end
+        end
+
+        if old_tag == new_tag then
+            if old_tag == MIX then
+                for _, dir in ipairs(DIRECTS) do
+                    cmp(old.children[dir], new.children[dir])
+                end
+            else
+                return
+            end
+        elseif old_tag == MIX then
+            for _, dir in ipairs(DIRECTS) do
+                cmp(old.children[dir], new_tag)
+            end
+        elseif new_tag == MIX then
+            for _, dir in ipairs(DIRECTS) do
+                cmp(old_tag, new.children[dir])
+            end
+        else
+            add_to_list()
+        end
+    end
+    cmp(old_map.root, new_map.root)
+    return new_fog_list, new_dispel_list
 end
 
 function M.dump(map)

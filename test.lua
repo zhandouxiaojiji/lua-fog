@@ -67,5 +67,16 @@ end
 print("=========================================")
 test3()
 
+local function test4()
+    local w, h = 20, 20
+    local map1 = fog.create(w, h)
+    fog.dispel_fog(map1, 10, 10, 10, 10)
+    fog.dump(map1)
+    local map2 = fog.create(w, h)
+    local fog_list, dispel_list = fog.cmp(map2, map1)
+    print("fog_list", #fog_list)
+    print("dispel_list", #dispel_list)
+end
+test4()
 
 print("test ok")
